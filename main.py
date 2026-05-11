@@ -3,11 +3,12 @@ import socket
 import random
 from channel_msg import *
 from user_messages import *
+from session_msg import *
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect(('csc4026z.link', 51825))
     #very wonky but this is just to test
-    keyboard = input(f"Welcome to a little test!\nOptions:\n1. CONNECT\n2. DISCONNECT\n3. CHANGE USERNAME\n4. USER LIST\n5. WHOAMI\n6. WHOIS\n")
+    keyboard = input(f"Welcome to a little test!\nOptions:\n1. CONNECT\n2. DISCONNECT\n3. CHANGE USERNAME\n4. USER LIST\n5. WHOAMI\n6. WHOIS\n7.channel list")
     if keyboard == "1":
     #connect
         sock.send(msgpack.packb(CONNECT_REQUEST()))
@@ -61,10 +62,14 @@ def main():
             if data['response_type'] != 20:
                 username_spy, channels, transport, wireguard_key = WHOIS_RESPONSE(data)
                 print(f"{username_spy} belongs to {channels} channels. The transport method is {transport} and the key is {wireguard_key}")  
-            else:
+            else: 
                 error = ERROR_response(data)
                 print(f"An error has ocurred: {error}")
-        keyboard = input(f"Options:\n1. CONNECT\n2. DISCONNECT\n3. CHANGE USERNAME\n4. USER LIST\n5. WHOAMI\n6. WHOIS\n")
+        if keyboard =="7":
+            print(CHANNEL_LIST_PRO(sock,session))
+        keyboard = input(f"Options:\n1. CONNECT\n2. DISCONNECT\n3. CHANGE USERNAME\n4. USER LIST\n5. WHOAMI\n6. WHOIS\n7. channel list")
+        
+        
 
          
     sock.send(msgpack.packb(DISCONNECT_REQUEST(session)))
