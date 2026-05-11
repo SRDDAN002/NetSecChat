@@ -7,8 +7,22 @@ from session_msg import *
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect(('csc4026z.link', 51825))
+    menu_text = f"Welcome to a little test!\nOptions:\n1. CONNECT\n"
+    loop_text = f"""Welcome to a little test!\n
+    2. DISCONNECT\n
+    3. CHANGE USERNAME\n
+    4. USER LIST\n
+    5. WHOAMI\n
+    6. WHOIS\n
+    7.CHANNEL_CREATE\n
+    8.CHANNEL_LIST\n
+    9.CHANNEL_INFO\n
+    10.CHANNEL_JOIN\n
+    11.CHANNEL_LEAVE\n
+    12.CHANNEL_MSG\n
+    """
     #very wonky but this is just to test
-    keyboard = input(f"Welcome to a little test!\nOptions:\n1. CONNECT\n2. DISCONNECT\n3. CHANGE USERNAME\n4. USER LIST\n5. WHOAMI\n6. WHOIS\n7.channel list")
+    keyboard = input(menu_text)
     if keyboard == "1":
     #connect
         sock.send(msgpack.packb(CONNECT_REQUEST()))
@@ -16,9 +30,10 @@ def main():
         data = msgpack.unpackb(data)
         session, welcome, username = CONNECT_RESPONSE(data)
         print(f"{welcome} IP address {addr[0]} at port number {addr[1]}\n Username is {username}")  
-    keyboard = input(f"Options:\n1. CONNECT\n2. DISCONNECT\n3. CHANGE USERNAME\n4. USER LIST\n5. WHOAMI\n6. WHOIS\n")
+    
     #need to continuosly receive and send pings
     while (keyboard != "2"):
+        keyboard = input(loop_text)
         if keyboard == "3":
             new_username = input(f"Enter you new username: \n")
             sock.send(msgpack.packb(SET_USERNAME_REQUEST(session, new_username)))
@@ -66,8 +81,31 @@ def main():
                 error = ERROR_response(data)
                 print(f"An error has ocurred: {error}")
         if keyboard =="7":
+            channel_name = input("Channel name:")
+            description = input("Description:")
+            CHANNEL_CREATE(sock,session,channel_name=channel_name,description=description)
+        if keyboard =="8":
             print(CHANNEL_LIST_PRO(sock,session))
-        keyboard = input(f"Options:\n1. CONNECT\n2. DISCONNECT\n3. CHANGE USERNAME\n4. USER LIST\n5. WHOAMI\n6. WHOIS\n7. channel list")
+        if keyboard =="9":
+            channel_name = input("Channel name:")
+            
+            CHANNEL_INFO(sock,session,channel_name)
+        if keyboard =="10":
+            channel_name = input("Channel name:")
+            
+            CHANNEL_JOIN(sock,session,channel_name)
+        if keyboard =="11":
+            channel_name = input("Channel name:")
+            
+            CHANNEL_LEAVE(sock,session,channel_name)
+        if keyboard =="12":
+            channel_name = input("Channel name:")
+            msg = input("Message:")
+            
+            CHANNEL_MESSAGE(sock,session,channel_name,msg)
+        
+            
+        
         
         
 
