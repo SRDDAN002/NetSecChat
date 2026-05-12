@@ -8,13 +8,12 @@ from session_msg import *
 from classes import *
 #connection = Connection('csc4026z.link', 51825)    
 
-server = Manager('csc4026z.link',51825) 
-# might have done a oopsie with making connection a singleton    
-    
+server = Manager() 
 
 
 
 def main():
+    typeOfConnection_text = f"Welcome to a little test!\nOptions:\n1. Cleartext\n2. Encrypted\n"
     
     menu_text = f"Welcome to a little test!\nOptions:\n1. CONNECT\n"
     loop_text = f"""Welcome to a little test!\n
@@ -31,16 +30,22 @@ def main():
 12.CHANNEL_MSG\n
     """
     #very wonky but this is just to test
+    keyboard = input(typeOfConnection_text)
+    if keyboard =="1":
+        server.setConnectionType("cleartext")
+    elif keyboard == "2":
+        server.setConnectionType("encrypted")
+    else:
+        print("mmmmm")
+    
+        
+    
+    
     keyboard = input(menu_text)
     if keyboard == "1":
     #connect
         _,_,username = server.connect()
         server.setUser(username)
-        #sock.send(CONNECT_REQUEST()))
-        #data, addr = sock.recvfrom(4096)
-        #data = msgpack.unpackb(data)
-        #welcome, username = data
-        #print(f"{welcome} IP address {addr[0]} at port number {addr[1]}\n Username is {username}")  
     
     #need to continuosly receive and send pings
     while (keyboard != "2"):
@@ -89,24 +94,35 @@ def main():
             else: 
                 error = ERROR_response(data)
                 print(f"An error has ocurred: {error}")
+        
         if keyboard =="7":
+            
             channel_name = input("Channel name:")
             description = input("Description:")
-            #CHANNEL_CREATE(channel_name=channel_name,description=description)
-            server.createChannel(channel_name,description)
+            server.CHANNEL_CREATE(channel_name,description)
+
         if keyboard =="8":
+            
             print(server.CHANNEL_LIST_PRO())
+
         if keyboard =="9":
+            
             channel_name = input("Channel name:")
             server.CHANNEL_INFO(channel_name)
+
         if keyboard =="10":
+            
             channel_name = input("Channel name:")
             server.CHANNEL_JOIN(channel_name)
+
         if keyboard =="11":
+            
             channel_name = input("Channel name:")
             server.CHANNEL_LEAVE(channel_name)
+
             #TODO
         if keyboard =="12":
+            
             channel_name = input("Channel name:")
             msg = input("Message:")
             msg = Message(msg)
@@ -114,14 +130,7 @@ def main():
             server.CHANNEL_MESSAGE(channel_name,msg)
         
             
-        
-        
-        
-
-         
-    
-    
-    
+  
     #goodbye = DISCONNECT_RESPONSE()
     data = server.disconnect()
     #print(data)

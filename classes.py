@@ -48,17 +48,23 @@ class User:
         pass
     def dm(self):
         pass
-    def getMyChannels():
+    def getMyChannels(self):
         pass
 
 class Manager:
-    def __init__(self,ip,port):
+    def __init__(self):
         self.user = None
         self.channels = []
-        self.connection = Connection(ip,port)
+        self.connection = None
         
-    def addConnection(self,ip,port):
-        self.connection = Connection(ip,port)
+    def setConnectionType(self,type):
+        if type == "cleartext":
+            self.connection = Connection('csc4026z.link',51825) 
+        elif type=="encrypted":
+            self.connection = Connection('csc4026z.link',51820)
+        else:
+            print("Error: invalid type")
+        
         
     def setUser(self,username):
         self.user = User(username)
@@ -152,11 +158,12 @@ class Manager:
         else:
             error = data["error"]
             print(f"Error: \"{error}\"")
+            
         
         
         
         
-        return channel_name,description,channel_members
+        return data
 
     """CHANNEL_JOIN"""
     def CHANNEL_JOIN(self,channel):
