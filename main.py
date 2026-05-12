@@ -8,7 +8,7 @@ from classes import connection
 from classes import *
 
 server = Server() 
-    
+# might have done a oopsie with making connection a singleton    
     
 user = User()
 
@@ -114,7 +114,7 @@ def main():
             msg = input("Message:")
             msg = Message(msg)
             msg = msg.data
-            #CHANNEL_MESSAGE(channel_name,msg)
+            CHANNEL_MESSAGE(channel_name,msg)
         
             
         
