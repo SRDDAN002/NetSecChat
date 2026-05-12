@@ -5,13 +5,15 @@ from channel_msg import *
 from user_messages import *
 from session_msg import *
 
-
+#TODO
 class User:
     def __init__(self):
         self.username = None
         self.channels = None
-    
-    
+    def setUsername(self,username):
+        self.username = username
+    def getUsername(self):
+        return self.username
     def channel_msg(self):
         pass
     def dm(self):
@@ -51,12 +53,11 @@ class Connection:
     def disconnect(self):
         data = self.send(DISCONNECT_REQUEST())
         return data
-    
-connection = Connection('csc4026z.link', 51825)
+connection = Connection('csc4026z.link', 51825)    
     
 class Message:
-    def __init__(self):
-        pass
+    def __init__(self,data):
+        self.data = data
     def encrypt(self):
         pass
     
@@ -80,13 +81,14 @@ class Server:
         self.channels= None
     def getChannels(self):
         self.channels = CHANNEL_LIST_PRO()
+        print(self.channels)
         return self.channels
-    def createChannel(name,description=""):
-        CHANNEL_CREATE(name,description)
+    def createChannel(self,name,description=""):
+        self.channels+= CHANNEL_CREATE(name,description)["channel"]
     def channelInfo(name):
         return CHANNEL_INFO(name)
-    def join_channel(name):
-        CHANNEL_JOIN(name)
+    def join_channel(self,name):
+        self.channels+= CHANNEL_JOIN(name)["channel"]
     def whoIs(self):
         pass
     

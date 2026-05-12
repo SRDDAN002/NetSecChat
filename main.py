@@ -5,6 +5,13 @@ from channel_msg import *
 from user_messages import *
 from session_msg import *
 from classes import connection
+from classes import *
+
+server = Server() 
+    
+    
+user = User()
+
 
 def main():
     
@@ -27,6 +34,7 @@ def main():
     if keyboard == "1":
     #connect
         _,_,username = connection.connect()
+        user.setUsername(username)
         #sock.send(CONNECT_REQUEST()))
         #data, addr = sock.recvfrom(4096)
         #data = msgpack.unpackb(data)
@@ -83,26 +91,30 @@ def main():
         if keyboard =="7":
             channel_name = input("Channel name:")
             description = input("Description:")
-            CHANNEL_CREATE(channel_name=channel_name,description=description)
+            #CHANNEL_CREATE(channel_name=channel_name,description=description)
+            server.createChannel(channel_name,description)
         if keyboard =="8":
-            print(CHANNEL_LIST_PRO())
+            server.getChannels()
+            #print(CHANNEL_LIST_PRO())
         if keyboard =="9":
             channel_name = input("Channel name:")
-            
-            CHANNEL_INFO(channel_name)
+            server.channelInfo(channel_name)
+           # CHANNEL_INFO(channel_name)
         if keyboard =="10":
             channel_name = input("Channel name:")
-            
-            CHANNEL_JOIN(channel_name)
+            server.join_channel(channel_name)
+            #CHANNEL_JOIN(channel_name)
         if keyboard =="11":
             channel_name = input("Channel name:")
             
             CHANNEL_LEAVE(channel_name)
+            #TODO
         if keyboard =="12":
             channel_name = input("Channel name:")
             msg = input("Message:")
-            
-            CHANNEL_MESSAGE(channel_name,msg)
+            msg = Message(msg)
+            msg = msg.data
+            #CHANNEL_MESSAGE(channel_name,msg)
         
             
         
@@ -115,9 +127,9 @@ def main():
     
     #goodbye = DISCONNECT_RESPONSE()
     data = connection.disconnect()
-    print(data)
+    #print(data)
     goodbye = data["message"]
-    print(f"{goodbye} from IP address {connection.ip} at port number {connection.port}\n Username {username} is now terminated")  
+    print(f"{goodbye} from IP address {connection.ip} at port number {connection.port}\n Username {user.getUsername()} is now terminated")  
 
 
 
