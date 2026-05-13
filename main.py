@@ -6,65 +6,64 @@ import random
 from channel_msg import *
 from user_messages import *
 from session_msg import *
-#from classes import connection
-from classes import *
-#connection = Connection('csc4026z.link', 51825)    
+
+import sys
+import random
+from PySide6 import QtCore, QtWidgets, QtGui
 
 
-server = Manager() 
+class MyWidget(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
 
-async def main():
-    typeOfConnection_text = f"Welcome to a little test!\nOptions:\n1. Cleartext\n2. Encrypted\n"
-    menu_text = f"Welcome to a little test!\nOptions:\n1. CONNECT\n"
-    keyboard = input(typeOfConnection_text)
-    
-    if keyboard =="1":
-        server.setConnectionType("cleartext")
+        self.layout = QtWidgets.QGridLayout(self)
+
+        self.con = QtWidgets.QPushButton("Connect")  
+        self.disCon = QtWidgets.QPushButton("Disconnect")
+        self.changeUname = QtWidgets.QPushButton("Change Username")
+        self.listUsers = QtWidgets.QPushButton("List Users")
+        self.whoIs = QtWidgets.QPushButton("Search User")   
+        self.whoAmI = QtWidgets.QPushButton("Username")
+
+        self.welcomeLbl = QtWidgets.QLabel("Welcome to NetSac! \n Options:", alignment = QtCore.Qt.AlignCenter)
         
-        
-    elif keyboard == "2":
-        server.setConnectionType("encrypted")
-    else:
-        print("Invalid type")
-    
-        
-    
-    
-    keyboard = input(menu_text)
-    if keyboard == "1":
-    
-        print("m")
-        server.connect()
-        await asyncio.gather(
-        
-        server.listen(),
-        server.start_ping_loop(),
-        handleInput()
-    )
-        
-       
-    else:
-        print("Invalid input")
-    
+        self.layout.addWidget(self.welcomeLbl, 0, 2)
+
+        self.innerContainer = QtWidgets.QWidget()
+        self.subLayout = QtWidgets.QHBoxLayout(self.innerContainer)
+
+        self.textDisplay = QtWidgets.QPlainTextEdit()
+
+        self.subLayout.addWidget(self.textDisplay)
+        self.layout.addWidget(self.innerContainer, 1, 2)
+
+        self.layout.addWidget(self.whoIs, 2, 1)
+        self.layout.addWidget(self.con, 2, 2)
+        self.layout.addWidget(self.changeUname, 2, 3)
+        self.layout.addWidget(self.listUsers, 3, 1)
+        self.layout.addWidget(self.disCon, 3, 2)
+        self.layout.addWidget(self.whoAmI, 3, 3)
+
+        self.con.clicked.connect(self.magic)
+
     
 
-async def handleInput():
-    
-    
-    loop_text = f"""Welcome to a little test!\n
-2. DISCONNECT\n
-3. CHANGE USERNAME\n
-4. USER LIST\n
-5. WHOAMI\n
-6. WHOIS\n
-7.CHANNEL_CREATE\n
-8.CHANNEL_LIST\n
-9.CHANNEL_INFO\n
-10.CHANNEL_JOIN\n
-11.CHANNEL_LEAVE\n
-12.CHANNEL_MSG\n
-13. User MSG\n
-    """
+def main():
+
+    app = QtWidgets.QApplication([])
+
+    widget = MyWidget()
+    widget.resize(800, 600)
+    widget.show()
+
+    sys.exit(app.exec())
+
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.connect(('csc4026z.link', 51825))
+
+    # if widget.con.clicked()
+
     #very wonky but this is just to test
     keyboard = input(loop_text)
     while (keyboard != "2"):
@@ -151,5 +150,6 @@ async def handleInput():
 
 
 
-if __name__ == '__main__':
-    asyncio.run(main())
+if '__name__ == __main__':
+    main()
+    
