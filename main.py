@@ -4,9 +4,64 @@ import random
 from channel_msg import *
 from user_messages import *
 from session_msg import *
+
+import sys
+import random
+from PySide6 import QtCore, QtWidgets, QtGui
+
+
+class MyWidget(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.layout = QtWidgets.QGridLayout(self)
+
+        self.con = QtWidgets.QPushButton("Connect")  
+        self.disCon = QtWidgets.QPushButton("Disconnect")
+        self.changeUname = QtWidgets.QPushButton("Change Username")
+        self.listUsers = QtWidgets.QPushButton("List Users")
+        self.whoIs = QtWidgets.QPushButton("Search User")   
+        self.whoAmI = QtWidgets.QPushButton("Username")
+
+        self.welcomeLbl = QtWidgets.QLabel("Welcome to NetSac! \n Options:", alignment = QtCore.Qt.AlignCenter)
+        
+        self.layout.addWidget(self.welcomeLbl, 0, 2)
+
+        self.innerContainer = QtWidgets.QWidget()
+        self.subLayout = QtWidgets.QHBoxLayout(self.innerContainer)
+
+        self.textDisplay = QtWidgets.QPlainTextEdit()
+
+        self.subLayout.addWidget(self.textDisplay)
+        self.layout.addWidget(self.innerContainer, 1, 2)
+
+        self.layout.addWidget(self.whoIs, 2, 1)
+        self.layout.addWidget(self.con, 2, 2)
+        self.layout.addWidget(self.changeUname, 2, 3)
+        self.layout.addWidget(self.listUsers, 3, 1)
+        self.layout.addWidget(self.disCon, 3, 2)
+        self.layout.addWidget(self.whoAmI, 3, 3)
+
+        self.con.clicked.connect(self.magic)
+
+    
+
 def main():
+
+    app = QtWidgets.QApplication([])
+
+    widget = MyWidget()
+    widget.resize(800, 600)
+    widget.show()
+
+    sys.exit(app.exec())
+
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.connect(('csc4026z.link', 51825))
+
+    # if widget.con.clicked()
+
     #very wonky but this is just to test
     keyboard = input(f"Welcome to a little test!\nOptions:\n1. CONNECT\n2. DISCONNECT\n3. CHANGE USERNAME\n4. USER LIST\n5. WHOAMI\n6. WHOIS\n7.channel list")
     if keyboard == "1":
@@ -83,3 +138,4 @@ def main():
 
 if '__name__ == __main__':
     main()
+    
