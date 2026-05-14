@@ -8,6 +8,9 @@ import random
 #data, addr = sock.recvfrom(4096)
 #print(msgpack.unpackb(data))
 
+
+#! Depracated
+
 """CHANNEL_CREATE """
 def CHANNEL_CREATE(channel_name,description=""):
     data= {

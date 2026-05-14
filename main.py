@@ -1,3 +1,5 @@
+import asyncio
+
 import msgpack # Install with: pip install msgpack
 import socket
 import random
@@ -8,14 +10,47 @@ from session_msg import *
 from classes import *
 #connection = Connection('csc4026z.link', 51825)    
 
+
 server = Manager() 
 
-
-
-def main():
+async def main():
     typeOfConnection_text = f"Welcome to a little test!\nOptions:\n1. Cleartext\n2. Encrypted\n"
-    
     menu_text = f"Welcome to a little test!\nOptions:\n1. CONNECT\n"
+    keyboard = input(typeOfConnection_text)
+    
+    if keyboard =="1":
+        server.setConnectionType("cleartext")
+        
+        
+    elif keyboard == "2":
+        server.setConnectionType("encrypted")
+    else:
+        print("Invalid type")
+    
+        
+    
+    
+    keyboard = input(menu_text)
+    if keyboard == "1":
+    
+        print("m")
+        server.connect()
+        await asyncio.gather(
+        
+        server.listen(),
+        server.start_ping_loop(),
+        handleInput()
+    )
+        
+       
+    else:
+        print("Invalid input")
+    
+    
+
+async def handleInput():
+    
+    
     loop_text = f"""Welcome to a little test!\n
 2. DISCONNECT\n
 3. CHANGE USERNAME\n
@@ -28,97 +63,67 @@ def main():
 10.CHANNEL_JOIN\n
 11.CHANNEL_LEAVE\n
 12.CHANNEL_MSG\n
+13. User MSG\n
     """
     #very wonky but this is just to test
-    keyboard = input(typeOfConnection_text)
-    if keyboard =="1":
-        server.setConnectionType("cleartext")
-    elif keyboard == "2":
-        server.setConnectionType("encrypted")
-    else:
-        print("mmmmm")
-    
-        
-    
-    
-    keyboard = input(menu_text)
-    if keyboard == "1":
-    #connect
-        _,_,username = server.connect()
-        server.setUser(username)
-    
-    #need to continuosly receive and send pings
+    keyboard = input(loop_text)
     while (keyboard != "2"):
-        keyboard = input(loop_text)
+        
         if keyboard == "3":
             
-            new_username = input(f"Enter you new username: \n")
+            new_username = input(f"Enter you new username: ")
             
-            data=server.send(SET_USERNAME_REQUEST(new_username))
+            data = await server.set_username(new_username)
             
-            if data['response_type'] != 20:
-                old_username, new_username = SET_USERNAME_RESPONSE(data)
-                print(f"{old_username} changed to {new_username}")  
-                username = new_username
-            else:
-                error = ERROR_response(data)
-                print(f"An error has ocurred: {error}")
+            
 
         if keyboard == "4":
-            data =server.send(USER_LIST())
             
-            if data['response_type'] != 20:
-                user_list, next_page_bool = USER_LIST_RESPONSE(data)
-                print(f"User list: {user_list}\n Any additional pages is {next_page_bool}")  
+            channel = input(f"Filter by channel [Y\\N]?")
+            if channel == "N":
+                data = await server.user_list_pro()
+                
+                
+            elif channel =="Y":
+                filter_channel = input("channel name:\n")
+                data =await server.user_list_pro(filter_channel)
+                
             else:
-                error = ERROR_response(data)
-                print(f"An error has ocurred: {error}")
+                print("Invalid input")
+                
+            
 
         if keyboard == "5":
-            data = server.send(WHOAMI_REQUEST())
-            
-            if data['response_type'] != 20:
-                username_query = WHOAMI_RESPONSE(data)
-                print(f"It would seem you have forgotten who you are. Your name is {username_query} and you are welcome here!!!")  
-            else:
-                error = ERROR_response(data)
-                print(f"An error has ocurred: {error}")
+            data = await server.whoami()
             
         if keyboard == '6':
             identity = input (f"It seems you're curious. Who are we spying on?\n")
-            data = server.send(WHOIS_REQUEST(identity))
-            
-            if data['response_type'] != 20:
-                username_spy, channels, transport, wireguard_key = WHOIS_RESPONSE(data)
-                print(f"{username_spy} belongs to {channels} channels. The transport method is {transport} and the key is {wireguard_key}")  
-            else: 
-                error = ERROR_response(data)
-                print(f"An error has ocurred: {error}")
+            data = await server.whosis(identity)
         
         if keyboard =="7":
             
             channel_name = input("Channel name:")
             description = input("Description:")
-            server.CHANNEL_CREATE(channel_name,description)
+            await server.CHANNEL_CREATE(channel_name,description)
 
         if keyboard =="8":
             
-            print(server.CHANNEL_LIST_PRO())
+            print(await server.CHANNEL_LIST_PRO())
 
         if keyboard =="9":
             
             channel_name = input("Channel name:")
-            server.CHANNEL_INFO(channel_name)
+            await server.CHANNEL_INFO(channel_name)
 
         if keyboard =="10":
             
             channel_name = input("Channel name:")
-            server.CHANNEL_JOIN(channel_name)
+            await server.CHANNEL_JOIN(channel_name)
 
         if keyboard =="11":
             
             channel_name = input("Channel name:")
-            server.CHANNEL_LEAVE(channel_name)
+            await server.CHANNEL_LEAVE(channel_name)
 
             #TODO
         if keyboard =="12":
@@ -127,12 +132,18 @@ def main():
             msg = input("Message:")
             msg = Message(msg)
             msg = msg.data
-            server.CHANNEL_MESSAGE(channel_name,msg)
+            await server.CHANNEL_MESSAGE(channel_name,msg)
+        keyboard = input(loop_text)
+        
+        if keyboard == "13":
+            username = input("Send message to ?")
+            msg = input("message?")
+            data = await server.user_message(username,msg)
         
             
   
     #goodbye = DISCONNECT_RESPONSE()
-    data = server.disconnect()
+    data = await server.disconnect()
     #print(data)
     goodbye = data["message"]
     print(f"{goodbye} from IP address {server.connection.ip} at port number {server.connection.port}\n Username {server.getUsername()} is now terminated")  
@@ -140,5 +151,5 @@ def main():
 
 
 
-if '__name__ == __main__':
-    main()
+if __name__ == '__main__':
+    asyncio.run(main())
