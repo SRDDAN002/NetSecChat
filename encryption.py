@@ -38,6 +38,9 @@ encrypted_data = AEAD_encrypt(key, counter, plaintext, authtext)
 print(encrypted_data)
 
 print(AEAD_decrypt(key, counter, encrypted_data, authtext))
+
+#raw_bytes = base64.b64decode(string)
+#convert string to bytes before calling DH()
 #private_key = b'\xb0)e\xdbZ\x01\x8f\x0f\xf5\x91\x88<\xab\x15\x14\x95\xb3\x92\xbd&3\xfe\x18<\x8f\xd6P\xeb\xd0k\xdb\x7f'
 #public_key = b'\x14\xde\xd1\x90m?\x0eaBa\xbb\xf8\\\x08\xdd\xfd\x08\xa7?^\x9f\xcb\x16Y\xdf\xa1\\B\x9d\t7k'
 
