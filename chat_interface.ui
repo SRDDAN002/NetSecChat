@@ -1,0 +1,893 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1024</width>
+    <height>768</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>SIGNAL NETWORK // COMMUNICATION INTERFACE v1.0</string>
+  </property>
+  <!-- ========== STYLESHEET: RETRO-FUTURISTIC THEME ========== -->
+  <!-- CUSTOMIZABLE: Color Palette (warm neon orange/green) -->
+  <property name="styleSheet">
+   <string>
+/* ===== NEON COLOR PALETTE (CUSTOMIZE HERE) ===== */
+QMainWindow {
+ background-color: #0A0E27;
+ color: #39FF14;
+}
+
+QWidget {
+ background-color: #0A0E27;
+ color: #39FF14;
+}
+
+/* ===== CUSTOMIZABLE: Tab Styling ===== */
+QTabWidget::pane {
+ border: 2px solid #FF6B1A;
+ background-color: #0A0E27;
+}
+
+QTabBar::tab {
+ background-color: #1A1F3A;
+ color: #39FF14;
+ padding: 8px 20px;
+ border: 1px solid #FF6B1A;
+ margin-right: 2px;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+}
+
+QTabBar::tab:selected {
+ background-color: #FF6B1A;
+ color: #0A0E27;
+ border: 2px solid #39FF14;
+}
+
+QTabBar::tab:hover:!selected {
+ background-color: #2A2F4A;
+ border: 1px solid #39FF14;
+}
+
+/* ===== CUSTOMIZABLE: Button Styling (Retro 3D Effect) ===== */
+QPushButton {
+ background-color: #1A1F3A;
+ color: #39FF14;
+ border: 2px outset #FF6B1A;
+ padding: 6px 12px;
+ border-radius: 0px;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+ font-size: 10pt;
+}
+
+QPushButton:hover {
+ background-color: #2A2F4A;
+ color: #FF9500;
+ border: 2px outset #39FF14;
+}
+
+QPushButton:pressed {
+ border-style: inset;
+ background-color: #0A0E27;
+}
+
+/* ===== CUSTOMIZABLE: Input Field Styling (CRT-like) ===== */
+QLineEdit, QTextEdit, QPlainTextEdit {
+ background-color: #0F1430;
+ color: #39FF14;
+ border: 1px solid #FF6B1A;
+ padding: 4px;
+ font-family: 'Courier New', monospace;
+ font-size: 10pt;
+ selection-background-color: #FF6B1A;
+ selection-color: #0A0E27;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+ border: 2px solid #39FF14;
+ background-color: #1A1F3A;
+}
+
+/* ===== CUSTOMIZABLE: List and Tree View Styling ===== */
+QListWidget, QTreeWidget, QTableWidget {
+ background-color: #0F1430;
+ color: #39FF14;
+ border: 1px solid #FF6B1A;
+ gridline-color: #FF6B1A;
+ font-family: 'Courier New', monospace;
+}
+
+QListWidget::item:selected, QTreeWidget::item:selected, QTableWidget::item:selected {
+ background-color: #FF6B1A;
+ color: #0A0E27;
+}
+
+QListWidget::item:hover, QTreeWidget::item:hover, QTableWidget::item:hover {
+ background-color: #2A2F4A;
+ color: #FF9500;
+}
+
+/* ===== CUSTOMIZABLE: Scrollbar Styling ===== */
+QScrollBar:vertical {
+ background-color: #0A0E27;
+ width: 16px;
+ border: 1px solid #FF6B1A;
+}
+
+QScrollBar::handle:vertical {
+ background-color: #FF6B1A;
+ border-radius: 8px;
+ min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+ background-color: #39FF14;
+}
+
+QScrollBar:horizontal {
+ background-color: #0A0E27;
+ height: 16px;
+ border: 1px solid #FF6B1A;
+}
+
+QScrollBar::handle:horizontal {
+ background-color: #FF6B1A;
+ border-radius: 8px;
+ min-width: 20px;
+}
+
+QScrollBar::handle:horizontal:hover {
+ background-color: #39FF14;
+}
+
+/* ===== CUSTOMIZABLE: Label Styling ===== */
+QLabel {
+ color: #39FF14;
+ font-family: 'Courier New', monospace;
+}
+
+QLabel[status="active"] {
+ color: #39FF14;
+}
+
+QLabel[status="inactive"] {
+ color: #FF6B1A;
+}
+
+/* ===== CUSTOMIZABLE: Menu Bar and Status Bar ===== */
+QMenuBar {
+ background-color: #1A1F3A;
+ color: #39FF14;
+ border-bottom: 2px solid #FF6B1A;
+}
+
+QMenuBar::item:selected {
+ background-color: #FF6B1A;
+ color: #0A0E27;
+}
+
+QMenu {
+ background-color: #1A1F3A;
+ color: #39FF14;
+ border: 2px solid #FF6B1A;
+}
+
+QMenu::item:selected {
+ background-color: #FF6B1A;
+ color: #0A0E27;
+}
+
+QStatusBar {
+ background-color: #1A1F3A;
+ color: #39FF14;
+ border-top: 2px solid #FF6B1A;
+}
+
+/* ===== CUSTOMIZABLE: Separator/Divider ===== */
+QFrame[frameShape="4"] {
+ border-color: #FF6B1A;
+}
+
+/* ===== CUSTOMIZABLE: Splitter Styling ===== */
+QSplitter::handle {
+ background-color: #1A1F3A;
+ border-left: 1px solid #FF6B1A;
+ border-right: 1px solid #FF6B1A;
+}
+
+QSplitter::handle:hover {
+ background-color: #2A2F4A;
+}
+   </string>
+  </property>
+  <!-- ========== CENTRAL WIDGET & LAYOUT ========== -->
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="mainLayout">
+    <!-- ===== TOP PANEL: CONNECTION & SESSION ===== -->
+    <item>
+    <widget class="QFrame" name="topPanel">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <property name="styleSheet">
+      <string>
+QFrame {
+ background-color: #1A1F3A;
+ border-bottom: 2px solid #FF6B1A;
+ padding: 8px;
+}
+      </string>
+     </property>
+     <layout class="QHBoxLayout" name="topLayout">
+      <item>
+       <!-- ===== CUSTOMIZABLE: ASCII Art Connection Indicator ===== -->
+       <widget class="QLabel" name="connectionIndicator">
+        <property name="text">
+         <string>[●●●] NETWORK STATUS</string>
+        </property>
+        <property name="styleSheet">
+         <string>
+QLabel {
+ color: #39FF14;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+}
+         </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="connectButton">
+        <property name="text">
+         <string>► CONNECT</string>
+        </property>
+        <property name="maximumWidth">
+         <number>100</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="serverInput">
+        <property name="placeholderText">
+         <string>localhost:8000</string>
+        </property>
+        <property name="maximumWidth">
+         <number>150</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <!-- ===== CUSTOMIZABLE: ASCII Art Username Label ===== -->
+       <widget class="QLabel" name="usernameLabel">
+        <property name="text">
+         <string>[USER]</string>
+        </property>
+        <property name="styleSheet">
+         <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+}
+         </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="usernameInput">
+        <property name="placeholderText">
+         <string>Enter username</string>
+        </property>
+        <property name="maximumWidth">
+         <number>150</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer1">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <!-- ===== CUSTOMIZABLE: ASCII Art Session Indicator ===== -->
+       <widget class="QLabel" name="sessionIndicator">
+        <property name="text">
+         <string>◄ SESSION ACTIVE</string>
+        </property>
+        <property name="styleSheet">
+         <string>
+QLabel {
+ color: #39FF14;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+}
+         </string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    </item>
+    <!-- ===== MAIN CONTENT: SPLITTER WITH 3 PANES ===== -->
+    <item>
+    <widget class="QSplitter" name="mainSplitter">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <!-- LEFT PANEL: CHANNELS & USERS (TABBED) -->
+     <widget class="QTabWidget" name="leftTabWidget">
+      <property name="minimumWidth">
+       <number>250</number>
+      </property>
+      <property name="maximumWidth">
+       <number>350</number>
+      </property>
+      <!-- TAB 1: CHANNELS -->
+      <widget class="QWidget" name="channelsTab">
+       <attribute name="title">
+        <string>◆ CHANNELS</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="channelsLayout">
+        <!-- ===== CUSTOMIZABLE: ASCII Art Section Header ===== -->
+        <item>
+        <widget class="QLabel" name="channelsHeader">
+         <property name="text">
+          <string>┌─ AVAILABLE CHANNELS ─┐</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+ padding: 4px;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QListWidget" name="channelsList">
+         <property name="alternatingRowColors">
+          <bool>false</bool>
+         </property>
+        </widget>
+        </item>
+        <!-- ===== CUSTOMIZABLE: Action Buttons for Channels ===== -->
+        <item>
+        <layout class="QHBoxLayout" name="channelsButtonLayout">
+         <item>
+          <widget class="QPushButton" name="createChannelButton">
+           <property name="text">
+            <string>✚ CREATE</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="joinChannelButton">
+           <property name="text">
+            <string>→ JOIN</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="leaveChannelButton">
+           <property name="text">
+            <string>← LEAVE</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+        </item>
+       </layout>
+      </widget>
+      <!-- TAB 2: USERS -->
+      <widget class="QWidget" name="usersTab">
+       <attribute name="title">
+        <string>◈ USERS</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="usersLayout">
+        <!-- ===== CUSTOMIZABLE: ASCII Art Section Header ===== -->
+        <item>
+        <widget class="QLabel" name="usersHeader">
+         <property name="text">
+          <string>┌─ CONNECTED USERS ─┐</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+ padding: 4px;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QListWidget" name="usersList">
+         <property name="alternatingRowColors">
+          <bool>false</bool>
+         </property>
+        </widget>
+        </item>
+        <!-- ===== CUSTOMIZABLE: Action Buttons for Users ===== -->
+        <item>
+        <layout class="QHBoxLayout" name="usersButtonLayout">
+         <item>
+          <widget class="QPushButton" name="sendDMButton">
+           <property name="text">
+            <string>✉ DM</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="userInfoButton">
+           <property name="text">
+            <string>ⓘ INFO</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+     <!-- CENTER PANEL: MESSAGES & CHAT -->
+     <widget class="QWidget" name="centerPanel">
+      <layout class="QVBoxLayout" name="centerLayout">
+       <!-- ===== CUSTOMIZABLE: Message Display Area (with CRT-like borders) ===== -->
+       <item>
+       <widget class="QPlainTextEdit" name="messageDisplay">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string>
+QPlainTextEdit {
+ background-color: #0F1430;
+ color: #39FF14;
+ border: 2px solid #FF6B1A;
+ padding: 8px;
+ font-family: 'Courier New', monospace;
+ font-size: 10pt;
+}
+         </string>
+        </property>
+       </widget>
+       </item>
+       <!-- ===== CUSTOMIZABLE: Message Input Area ===== -->
+       <item>
+       <widget class="QFrame" name="messageInputFrame">
+        <property name="styleSheet">
+         <string>
+QFrame {
+ background-color: #1A1F3A;
+ border-top: 2px solid #FF6B1A;
+ padding: 8px;
+}
+         </string>
+        </property>
+        <layout class="QHBoxLayout" name="messageInputLayout">
+         <item>
+         <widget class="QLineEdit" name="messageInput">
+          <property name="placeholderText">
+           <string>TYPE MESSAGE [ENTER TO SEND]</string>
+          </property>
+         </widget>
+         </item>
+         <item>
+         <widget class="QPushButton" name="sendMessageButton">
+          <property name="text">
+           <string>► SEND</string>
+          </property>
+          <property name="maximumWidth">
+           <number>80</number>
+          </property>
+         </widget>
+         </item>
+        </layout>
+       </widget>
+       </item>
+      </layout>
+     </widget>
+     <!-- RIGHT PANEL: INFO DISPLAY (CHANNEL/USER DETAILS) -->
+     <widget class="QTabWidget" name="rightTabWidget">
+      <property name="minimumWidth">
+       <number>250</number>
+      </property>
+      <property name="maximumWidth">
+       <number>350</number>
+      </property>
+      <!-- TAB 1: CHANNEL INFO -->
+      <widget class="QWidget" name="channelInfoTab">
+       <attribute name="title">
+        <string>◆ CH INFO</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="channelInfoLayout">
+        <!-- ===== CUSTOMIZABLE: ASCII Art Section Header ===== -->
+        <item>
+        <widget class="QLabel" name="channelInfoHeader">
+         <property name="text">
+          <string>┌─ CHANNEL DETAILS ─┐</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+ padding: 4px;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QLabel" name="channelNameDisplay">
+         <property name="text">
+          <string>[CHANNEL NAME]</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #39FF14;
+ font-weight: bold;
+ padding: 4px;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QLabel" name="channelDescLabel">
+         <property name="text">
+          <string>DESCRIPTION:</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QPlainTextEdit" name="channelDescription">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+         <property name="maximumHeight">
+          <number>100</number>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QLabel" name="channelMembersLabel">
+         <property name="text">
+          <string>MEMBERS:</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QListWidget" name="channelMembersList">
+         <property name="maximumHeight">
+          <number>150</number>
+         </property>
+        </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- TAB 2: USER INFO -->
+      <widget class="QWidget" name="userInfoTab">
+       <attribute name="title">
+        <string>◈ USR INFO</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="userInfoLayout">
+        <!-- ===== CUSTOMIZABLE: ASCII Art Section Header ===== -->
+        <item>
+        <widget class="QLabel" name="userInfoHeader">
+         <property name="text">
+          <string>┌─ USER DETAILS ─┐</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+ padding: 4px;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QLabel" name="userNameDisplay">
+         <property name="text">
+          <string>[USERNAME]</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #39FF14;
+ font-weight: bold;
+ padding: 4px;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QLabel" name="userStatusLabel">
+         <property name="text">
+          <string>STATUS:</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QLabel" name="userStatusDisplay">
+         <property name="text">
+          <string>● ONLINE</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #39FF14;
+ padding: 4px;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QLabel" name="userBioLabel">
+         <property name="text">
+          <string>BIO/INFO:</string>
+         </property>
+         <property name="styleSheet">
+          <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+}
+          </string>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <widget class="QPlainTextEdit" name="userBioDisplay">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+        </item>
+        <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </widget>
+    </item>
+    <!-- ===== BOTTOM PANEL: STATUS BAR ===== -->
+    <item>
+    <widget class="QFrame" name="bottomPanel">
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+     <property name="styleSheet">
+      <string>
+QFrame {
+ background-color: #1A1F3A;
+ border-top: 2px solid #FF6B1A;
+ padding: 4px 8px;
+}
+      </string>
+     </property>
+     <layout class="QHBoxLayout" name="bottomLayout">
+      <item>
+       <!-- ===== CUSTOMIZABLE: ASCII Art Status Message ===== -->
+       <widget class="QLabel" name="statusMessage">
+        <property name="text">
+         <string>┤ READY ├</string>
+        </property>
+        <property name="styleSheet">
+         <string>
+QLabel {
+ color: #39FF14;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+}
+         </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <!-- ===== CUSTOMIZABLE: ASCII Art Message Count ===== -->
+       <widget class="QLabel" name="messageCount">
+        <property name="text">
+         <string>MSG: 0 | USERS: 0 | CHANNELS: 0</string>
+        </property>
+        <property name="styleSheet">
+         <string>
+QLabel {
+ color: #FF6B1A;
+ font-weight: bold;
+ font-family: 'Courier New', monospace;
+}
+         </string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    </item>
+   </layout>
+  </widget>
+  <!-- ========== MENU BAR ========== -->
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1024</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <!-- FILE MENU -->
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>FILE</string>
+    </property>
+    <addaction name="actionConnect"/>
+    <addaction name="actionDisconnect"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <!-- EDIT MENU -->
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>EDIT</string>
+    </property>
+    <addaction name="actionSettings"/>
+   </widget>
+   <!-- CHAT MENU -->
+   <widget class="QMenu" name="menuChat">
+    <property name="title">
+     <string>CHAT</string>
+    </property>
+    <addaction name="actionNewChannel"/>
+    <addaction name="actionJoinChannel"/>
+    <addaction name="actionLeaveChannel"/>
+    <addaction name="separator"/>
+    <addaction name="actionSendDM"/>
+   </widget>
+   <!-- HELP MENU -->
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>HELP</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuChat"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <!-- ========== MENU ACTIONS ========== -->
+  <action name="actionConnect">
+   <property name="text">
+    <string>Connect to Server</string>
+   </property>
+  </action>
+  <action name="actionDisconnect">
+   <property name="text">
+    <string>Disconnect</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Preferences</string>
+   </property>
+  </action>
+  <action name="actionNewChannel">
+   <property name="text">
+    <string>Create Channel</string>
+   </property>
+  </action>
+  <action name="actionJoinChannel">
+   <property name="text">
+    <string>Join Channel</string>
+   </property>
+  </action>
+  <action name="actionLeaveChannel">
+   <property name="text">
+    <string>Leave Channel</string>
+   </property>
+  </action>
+  <action name="actionSendDM">
+   <property name="text">
+    <string>Send Direct Message</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,10 +1,11 @@
 import asyncio
 import sys
 from typing import Optional
+from datetime import datetime
 
 import msgpack
 from PySide6 import QtCore, QtWidgets, QtGui
-from PySide6.QtCore import QThread, Signal, Slot
+from PySide6.QtCore import QThread, Signal, Slot, Qt
 
 from ui_form import Ui_MainWindow
 from classes import Connection, Message
@@ -21,12 +22,16 @@ class NetworkWorker(QtCore.QObject):
     connected = Signal(bool)
     data_received = Signal(str, object)  # (operation_type, data)
     error_occurred = Signal(str)
+    users_list_updated = Signal(list)
+    channels_list_updated = Signal(list)
+    message_received = Signal(str, str)  # (sender, message)
     
     def __init__(self):
         super().__init__()
         self.server: Optional[Connection] = None
         self.loop: Optional[asyncio.AbstractEventLoop] = None
         self.thread: Optional[QThread] = None
+        self.username: str = ""
     
     def setup_worker_thread(self):
         """Setup the worker to run in a separate thread."""
@@ -45,21 +50,23 @@ class NetworkWorker(QtCore.QObject):
         except Exception as e:
             self.error_occurred.emit(f"Failed to initialize event loop: {str(e)}")
     
-    @Slot()
-    def connect_to_server(self):
+    @Slot(str, str)
+    def connect_to_server(self, host: str = "", username: str = ""):
         """Connect to the server."""
         if self.loop:
-            asyncio.run_coroutine_threadsafe(self._async_connect(), self.loop)
+            asyncio.run_coroutine_threadsafe(
+                self._async_connect(host or 'csc4026z.link', 51825, username), self.loop
+            )
     
-    async def _async_connect(self):
+    async def _async_connect(self, host: str, port: int, username: str):
         """Async connection logic."""
         try:
-            from classes import Connection
-            self.server = Connection('csc4026z.link', 51825)
+            self.server = Connection(host, port)
+            self.username = username
             connect_msg = {"request_type": 1}
             data = self.server.connect(connect_msg)
             self.connected.emit(True)
-            self.status_message.emit(f"Connected! Session: {self.server.getSession()}")
+            self.status_message.emit(f"Connected to {host}:{port} - Session established")
             self.data_received.emit("connected", data)
         except Exception as e:
             self.connected.emit(False)
@@ -95,33 +102,31 @@ class NetworkWorker(QtCore.QObject):
         try:
             msg = {"request_type": 3, "username": new_username}
             data = await self.server.send(msg)
-            self.status_message.emit(f"Username changed to: {new_username}")
+            self.username = new_username
+            self.status_message.emit(f"Username set to: {new_username}")
             self.data_received.emit("username_changed", data)
         except Exception as e:
             self.error_occurred.emit(f"Failed to change username: {str(e)}")
     
-    @Slot(bool)
-    def list_users(self, filter_channel: bool = False, channel_name: str = ""):
-        """List users, optionally filtered by channel."""
+    @Slot()
+    def list_users(self):
+        """List users."""
         if self.loop and self.server:
-            asyncio.run_coroutine_threadsafe(
-                self._async_list_users(filter_channel, channel_name), self.loop
-            )
+            asyncio.run_coroutine_threadsafe(self._async_list_users(), self.loop)
     
-    async def _async_list_users(self, filter_channel: bool, channel_name: str):
+    async def _async_list_users(self):
         """Async list users."""
         try:
-            if filter_channel and channel_name:
-                msg = {"request_type": 4, "channel": channel_name}
-            else:
-                msg = {"request_type": 4}
+            msg = {"request_type": 4}
             data = await self.server.send(msg)
-            self.status_message.emit("User list retrieved")
+            users = data.get("users", []) if isinstance(data, dict) else []
+            self.users_list_updated.emit(users)
+            self.status_message.emit(f"User list retrieved ({len(users)} users)")
             self.data_received.emit("user_list", data)
         except Exception as e:
             self.error_occurred.emit(f"Failed to list users: {str(e)}")
     
-    @Slot(str)
+    @Slot()
     def whoami(self):
         """Get current username."""
         if self.loop and self.server:
@@ -132,7 +137,7 @@ class NetworkWorker(QtCore.QObject):
         try:
             msg = {"request_type": 5}
             data = await self.server.send(msg)
-            self.status_message.emit(f"You are: {data}")
+            self.status_message.emit(f"Current user: {self.username}")
             self.data_received.emit("whoami", data)
         except Exception as e:
             self.error_occurred.emit(f"Failed to get username: {str(e)}")
@@ -182,7 +187,9 @@ class NetworkWorker(QtCore.QObject):
         try:
             msg = {"request_type": 8}
             data = await self.server.send(msg)
-            self.status_message.emit("Channels list retrieved")
+            channels = data.get("channels", []) if isinstance(data, dict) else []
+            self.channels_list_updated.emit(channels)
+            self.status_message.emit(f"Channels list retrieved ({len(channels)} channels)")
             self.data_received.emit("channel_list", data)
         except Exception as e:
             self.error_occurred.emit(f"Failed to list channels: {str(e)}")
@@ -253,6 +260,7 @@ class NetworkWorker(QtCore.QObject):
                 "message": msg_obj.data,
             }
             data = await self.server.send(msg)
+            self.message_received.emit(f"[{self.username}@{channel_name}]", message_text)
             self.status_message.emit(f"Message sent to {channel_name}")
             self.data_received.emit("message_sent", data)
         except Exception as e:
@@ -271,6 +279,7 @@ class NetworkWorker(QtCore.QObject):
         try:
             msg = {"request_type": 13, "username": username, "message": message_text}
             data = await self.server.send(msg)
+            self.message_received.emit(f"[DM→{username}]", message_text)
             self.status_message.emit(f"Direct message sent to {username}")
             self.data_received.emit("user_message_sent", data)
         except Exception as e:
@@ -286,7 +295,7 @@ class NetworkWorker(QtCore.QObject):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    """Main application window using Ui_MainWindow template."""
+    """Main application window using Ui_MainWindow from chat_interface.ui"""
     
     def __init__(self):
         super().__init__()
@@ -297,206 +306,229 @@ class MainWindow(QtWidgets.QMainWindow):
         self.worker = NetworkWorker()
         self.worker.setup_worker_thread()
         
-        # Setup UI (add custom widgets to the template)
-        self.setup_custom_ui()
+        # Track current channel/user for messaging
+        self.current_channel: Optional[str] = None
+        self.current_dm_user: Optional[str] = None
         
         # Connect signals and slots
         self.connect_signals_slots()
         
-        # Window settings
-        self.setWindowTitle("NetSecChat")
-        self.resize(900, 700)
-    
-    def setup_custom_ui(self):
-        """Setup custom UI elements within the template."""
-        # Create a central layout for the main content
-        layout = QtWidgets.QVBoxLayout()
-        
-        # Welcome label
-        self.welcomeLbl = QtWidgets.QLabel(
-            "Welcome to NetSecChat!\n\nSelect an option below:", 
-            alignment=QtCore.Qt.AlignCenter
-        )
-        welcome_font = self.welcomeLbl.font()
-        welcome_font.setPointSize(14)
-        self.welcomeLbl.setFont(welcome_font)
-        layout.addWidget(self.welcomeLbl)
-        
-        # Text display area
-        self.textDisplay = QtWidgets.QPlainTextEdit()
-        self.textDisplay.setReadOnly(False)
-        self.textDisplay.setPlaceholderText("Operation output will appear here...")
-        layout.addWidget(self.textDisplay)
-        
-        # Buttons container
-        buttons_layout = QtWidgets.QGridLayout()
-        
-        self.con = QtWidgets.QPushButton("Connect")
-        self.disCon = QtWidgets.QPushButton("Disconnect")
-        self.changeUname = QtWidgets.QPushButton("Change Username")
-        self.listUsers = QtWidgets.QPushButton("List Users")
-        self.whoIs = QtWidgets.QPushButton("Search User")
-        self.whoAmI = QtWidgets.QPushButton("Who Am I")
-        self.createChannel = QtWidgets.QPushButton("Create Channel")
-        self.listChannels = QtWidgets.QPushButton("List Channels")
-        self.joinChannel = QtWidgets.QPushButton("Join Channel")
-        self.leaveChannel = QtWidgets.QPushButton("Leave Channel")
-        self.sendChannelMsg = QtWidgets.QPushButton("Send Channel Message")
-        self.sendUserMsg = QtWidgets.QPushButton("Send Direct Message")
-        
-        # Arrange buttons in grid
-        buttons_layout.addWidget(self.con, 0, 0)
-        buttons_layout.addWidget(self.disCon, 0, 1)
-        buttons_layout.addWidget(self.whoAmI, 0, 2)
-        buttons_layout.addWidget(self.changeUname, 1, 0)
-        buttons_layout.addWidget(self.listUsers, 1, 1)
-        buttons_layout.addWidget(self.whoIs, 1, 2)
-        buttons_layout.addWidget(self.createChannel, 2, 0)
-        buttons_layout.addWidget(self.listChannels, 2, 1)
-        buttons_layout.addWidget(self.joinChannel, 2, 2)
-        buttons_layout.addWidget(self.leaveChannel, 3, 0)
-        buttons_layout.addWidget(self.sendChannelMsg, 3, 1)
-        buttons_layout.addWidget(self.sendUserMsg, 3, 2)
-        
-        layout.addLayout(buttons_layout)
-        
-        # Set the layout to the central widget
-        self.ui.centralwidget.setLayout(layout)
+        # Setup menu actions
+        self.setup_menu_actions()
     
     def connect_signals_slots(self):
         """Connect button signals to worker slots and worker signals to UI slots."""
-        # Button clicks to worker methods
-        self.con.clicked.connect(self.worker.connect_to_server)
-        self.disCon.clicked.connect(self.worker.disconnect_from_server)
-        self.whoAmI.clicked.connect(self.worker.whoami)
-        self.listUsers.clicked.connect(lambda: self.worker.list_users(False))
-        self.listChannels.clicked.connect(self.worker.list_channels)
+        # Top panel
+        self.ui.connectButton.clicked.connect(self.on_connect_clicked)
         
-        # Buttons that need input dialogs
-        self.changeUname.clicked.connect(self.on_change_username)
-        self.whoIs.clicked.connect(self.on_search_user)
-        self.createChannel.clicked.connect(self.on_create_channel)
-        self.joinChannel.clicked.connect(self.on_join_channel)
-        self.leaveChannel.clicked.connect(self.on_leave_channel)
-        self.sendChannelMsg.clicked.connect(self.on_send_channel_message)
-        self.sendUserMsg.clicked.connect(self.on_send_user_message)
+        # Channels tab
+        self.ui.createChannelButton.clicked.connect(self.on_create_channel)
+        self.ui.joinChannelButton.clicked.connect(self.on_join_channel)
+        self.ui.leaveChannelButton.clicked.connect(self.on_leave_channel)
+        self.ui.channelsList.itemClicked.connect(self.on_channel_selected)
+        
+        # Users tab
+        self.ui.sendDMButton.clicked.connect(self.on_send_dm)
+        self.ui.userInfoButton.clicked.connect(self.on_user_info)
+        self.ui.usersList.itemClicked.connect(self.on_user_selected)
+        
+        # Message input
+        self.ui.messageInput.returnPressed.connect(self.on_send_message)
+        self.ui.sendMessageButton.clicked.connect(self.on_send_message)
         
         # Worker signals to UI slots
         self.worker.status_message.connect(self.on_status_message)
         self.worker.connected.connect(self.on_connection_state_changed)
         self.worker.data_received.connect(self.on_data_received)
         self.worker.error_occurred.connect(self.on_error)
+        self.worker.users_list_updated.connect(self.on_users_list_updated)
+        self.worker.channels_list_updated.connect(self.on_channels_list_updated)
+        self.worker.message_received.connect(self.on_message_received)
     
-    # Slot handlers for button clicks that require input
-    @Slot()
-    def on_change_username(self):
-        """Handle change username button."""
-        new_username, ok = QtWidgets.QInputDialog.getText(
-            self, "Change Username", "Enter new username:"
-        )
-        if ok and new_username:
-            self.worker.set_username(new_username)
+    def setup_menu_actions(self):
+        """Setup menu actions."""
+        self.ui.actionConnect.triggered.connect(self.on_connect_clicked)
+        self.ui.actionDisconnect.triggered.connect(self.worker.disconnect_from_server)
+        self.ui.actionExit.triggered.connect(self.close)
+        self.ui.actionNewChannel.triggered.connect(self.on_create_channel)
+        self.ui.actionJoinChannel.triggered.connect(self.on_join_channel)
+        self.ui.actionLeaveChannel.triggered.connect(self.on_leave_channel)
+        self.ui.actionSendDM.triggered.connect(self.on_send_dm)
+        self.ui.actionAbout.triggered.connect(self.on_about)
     
+    # Slot handlers for button clicks
     @Slot()
-    def on_search_user(self):
-        """Handle search user button."""
-        identity, ok = QtWidgets.QInputDialog.getText(
-            self, "Search User", "Enter username to search:"
-        )
-        if ok and identity:
-            self.worker.search_user(identity)
+    def on_connect_clicked(self):
+        """Handle connect button."""
+        server = self.ui.serverInput.text() or 'csc4026z.link'
+        username = self.ui.usernameInput.text() or f"user_{QtCore.QTime.currentTime().hour}{QtCore.QTime.currentTime().minute}"
+        
+        if not username.strip():
+            QtWidgets.QMessageBox.warning(self, "Connection", "Please enter a username")
+            return
+        
+        self.worker.connect_to_server(server, username)
+        self.ui.usernameLabel.setText(f"[{username}]")
     
     @Slot()
     def on_create_channel(self):
-        """Handle create channel button."""
+        """Handle create channel."""
         channel_name, ok = QtWidgets.QInputDialog.getText(
-            self, "Create Channel", "Enter channel name:"
+            self, "Create Channel", "Channel name:"
         )
-        if ok and channel_name:
+        if ok and channel_name.strip():
             description, ok2 = QtWidgets.QInputDialog.getText(
-                self, "Create Channel", "Enter channel description:"
+                self, "Create Channel", "Description:"
             )
             if ok2:
-                self.worker.create_channel(channel_name, description)
+                self.worker.create_channel(channel_name, description or "")
+                self.worker.list_channels()
     
     @Slot()
     def on_join_channel(self):
-        """Handle join channel button."""
+        """Handle join channel."""
         channel_name, ok = QtWidgets.QInputDialog.getText(
-            self, "Join Channel", "Enter channel name:"
+            self, "Join Channel", "Channel name:"
         )
-        if ok and channel_name:
+        if ok and channel_name.strip():
             self.worker.join_channel(channel_name)
+            self.current_channel = channel_name
     
     @Slot()
     def on_leave_channel(self):
-        """Handle leave channel button."""
-        channel_name, ok = QtWidgets.QInputDialog.getText(
-            self, "Leave Channel", "Enter channel name:"
-        )
-        if ok and channel_name:
-            self.worker.leave_channel(channel_name)
+        """Handle leave channel."""
+        if self.current_channel:
+            self.worker.leave_channel(self.current_channel)
+            self.current_channel = None
+        else:
+            QtWidgets.QMessageBox.warning(self, "Leave Channel", "No channel selected")
     
     @Slot()
-    def on_send_channel_message(self):
-        """Handle send channel message button."""
-        channel_name, ok = QtWidgets.QInputDialog.getText(
-            self, "Send Channel Message", "Enter channel name:"
-        )
-        if ok and channel_name:
-            message_text, ok2 = QtWidgets.QInputDialog.getText(
-                self, "Send Channel Message", "Enter message:"
-            )
-            if ok2 and message_text:
-                self.worker.send_channel_message(channel_name, message_text)
+    def on_send_dm(self):
+        """Handle send DM."""
+        if self.current_dm_user:
+            message = self.ui.messageInput.text()
+            if message.strip():
+                self.worker.send_user_message(self.current_dm_user, message)
+                self.ui.messageInput.clear()
+            else:
+                QtWidgets.QMessageBox.warning(self, "Send DM", "Message cannot be empty")
+        else:
+            QtWidgets.QMessageBox.warning(self, "Send DM", "Please select a user first")
     
     @Slot()
-    def on_send_user_message(self):
-        """Handle send direct message button."""
-        username, ok = QtWidgets.QInputDialog.getText(
-            self, "Send Direct Message", "Enter recipient username:"
+    def on_user_info(self):
+        """Handle user info."""
+        if self.current_dm_user:
+            self.worker.search_user(self.current_dm_user)
+        else:
+            QtWidgets.QMessageBox.warning(self, "User Info", "Please select a user first")
+    
+    @Slot()
+    def on_send_message(self):
+        """Handle send message."""
+        if self.current_channel:
+            message = self.ui.messageInput.text()
+            if message.strip():
+                self.worker.send_channel_message(self.current_channel, message)
+                self.ui.messageInput.clear()
+            else:
+                QtWidgets.QMessageBox.warning(self, "Send Message", "Message cannot be empty")
+        else:
+            QtWidgets.QMessageBox.warning(self, "Send Message", "Please select a channel first")
+    
+    @Slot()
+    def on_about(self):
+        """Handle about dialog."""
+        QtWidgets.QMessageBox.about(
+            self,
+            "About NetSecChat",
+            "NetSecChat v1.0\n\n"
+            "A secure network communication interface.\n"
+            "Built with PySide6 and retro-futuristic styling.\n\n"
+            "© 2026"
         )
-        if ok and username:
-            message_text, ok2 = QtWidgets.QInputDialog.getText(
-                self, "Send Direct Message", "Enter message:"
-            )
-            if ok2 and message_text:
-                self.worker.send_user_message(username, message_text)
+    
+    # Selection handlers
+    @Slot(object)
+    def on_channel_selected(self, item):
+        """Handle channel selection."""
+        self.current_channel = item.text()
+        self.ui.messageDisplay.setPlainText(f"[Channel: {self.current_channel}]\n\n")
+        self.ui.channelNameDisplay.setText(f"Channel: {self.current_channel}")
+    
+    @Slot(object)
+    def on_user_selected(self, item):
+        """Handle user selection."""
+        self.current_dm_user = item.text()
+        self.ui.messageDisplay.setPlainText(f"[DM with: {self.current_dm_user}]\n\n")
+        self.ui.userNameDisplay.setText(f"User: {self.current_dm_user}")
     
     # Worker signal handlers
     @Slot(str)
     def on_status_message(self, message: str):
         """Handle status messages from worker."""
-        self.ui.statusbar.showMessage(message, 5000)
-        self.textDisplay.appendPlainText(f"[STATUS] {message}")
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        self.ui.statusMessage.setText(f"[{timestamp}] {message}")
+        self.ui.messageDisplay.appendPlainText(f"[STATUS] {message}")
     
     @Slot(bool)
     def on_connection_state_changed(self, connected: bool):
         """Handle connection state changes."""
-        self.con.setEnabled(not connected)
-        self.disCon.setEnabled(connected)
-        # Enable other buttons only when connected
-        self.changeUname.setEnabled(connected)
-        self.listUsers.setEnabled(connected)
-        self.whoIs.setEnabled(connected)
-        self.whoAmI.setEnabled(connected)
-        self.createChannel.setEnabled(connected)
-        self.listChannels.setEnabled(connected)
-        self.joinChannel.setEnabled(connected)
-        self.leaveChannel.setEnabled(connected)
-        self.sendChannelMsg.setEnabled(connected)
-        self.sendUserMsg.setEnabled(connected)
+        self.ui.connectButton.setText("● DISCONNECT" if connected else "► CONNECT")
+        self.ui.connectButton.setEnabled(True)
+        self.ui.connectionIndicator.setText("●●● CONNECTED" if connected else "●●● OFFLINE")
+        self.ui.connectionIndicator.setStyleSheet(
+            "QLabel { color: #39FF14; font-weight: bold; }" if connected 
+            else "QLabel { color: #FF6B1A; font-weight: bold; }"
+        )
+        
+        # Disable UI elements when disconnected
+        self.ui.serverInput.setEnabled(not connected)
+        self.ui.usernameInput.setEnabled(not connected)
+        self.ui.createChannelButton.setEnabled(connected)
+        self.ui.joinChannelButton.setEnabled(connected)
+        self.ui.leaveChannelButton.setEnabled(connected)
+        self.ui.sendDMButton.setEnabled(connected)
+        self.ui.userInfoButton.setEnabled(connected)
+        self.ui.messageInput.setEnabled(connected)
+        self.ui.sendMessageButton.setEnabled(connected)
+        
+        if connected:
+            self.worker.list_channels()
+            self.worker.list_users()
     
     @Slot(str, object)
     def on_data_received(self, operation_type: str, data: object):
         """Handle data received from worker."""
-        self.textDisplay.appendPlainText(f"\n[{operation_type.upper()}]\n{str(data)}\n")
+        self.ui.messageDisplay.appendPlainText(f"\n[{operation_type.upper()}]\n{str(data)}\n")
     
     @Slot(str)
     def on_error(self, error_msg: str):
         """Handle errors from worker."""
-        self.textDisplay.appendPlainText(f"\n[ERROR] {error_msg}\n")
+        self.ui.messageDisplay.appendPlainText(f"\n[ERROR] {error_msg}\n")
         QtWidgets.QMessageBox.critical(self, "Error", error_msg)
+    
+    @Slot(list)
+    def on_users_list_updated(self, users: list):
+        """Update users list."""
+        self.ui.usersList.clear()
+        for user in users:
+            self.ui.usersList.addItem(str(user))
+        self.ui.messageCount.setText(f"MSG: 0 | USERS: {len(users)} | CHANNELS: 0")
+    
+    @Slot(list)
+    def on_channels_list_updated(self, channels: list):
+        """Update channels list."""
+        self.ui.channelsList.clear()
+        for channel in channels:
+            self.ui.channelsList.addItem(str(channel))
+        self.ui.messageCount.setText(f"MSG: 0 | USERS: 0 | CHANNELS: {len(channels)}")
+    
+    @Slot(str, str)
+    def on_message_received(self, sender: str, message: str):
+        """Handle message received."""
+        self.ui.messageDisplay.appendPlainText(f"{sender}: {message}")
     
     def closeEvent(self, event):
         """Handle window close event."""
@@ -514,6 +546,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
-
-    
