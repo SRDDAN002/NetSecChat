@@ -1,5 +1,6 @@
 import asyncio
 
+import concurrent
 import msgpack # Install with: pip install msgpack
 import socket
 import random
@@ -8,6 +9,8 @@ from user_messages import *
 from session_msg import *
 #from classes import connection
 from classes import *
+import sys
+import os
 #connection = Connection('csc4026z.link', 51825)    
 
 
@@ -39,9 +42,11 @@ async def main():
         handle_input = asyncio.create_task(handleInput())
         
         await handle_input
-        listen.cancel()
-        ping_task.cancel()
         
+        
+       
+        
+        await asyncio.gather(listen, ping_task, return_exceptions=True)
         
         
        
@@ -70,8 +75,13 @@ async def handleInput():
     #very wonky but this is just to test
     loop = asyncio.get_event_loop()
     keyboard = await loop.run_in_executor(None, input, loop_text)
-    #keyboard = input(loop_text)
-    while (keyboard != "2"):
+    
+    while True:
+        if keyboard =="2":
+            data = await server.disconnect()
+            goodbye = data["message"]
+            print(f"{goodbye} from IP address {server.connection.ip} at port number {server.connection.port}\n Username {server.getUsername()} is now terminated")
+            os._exit(0)
         
         if keyboard == "3":
             new_username = await loop.run_in_executor(None, input, "Enter you new username: ")
@@ -165,10 +175,7 @@ async def handleInput():
             
   
     #goodbye = DISCONNECT_RESPONSE()
-    data = await server.disconnect()
-    #print(data)
-    goodbye = data["message"]
-    print(f"{goodbye} from IP address {server.connection.ip} at port number {server.connection.port}\n Username {server.getUsername()} is now terminated")  
+      
 
 
 

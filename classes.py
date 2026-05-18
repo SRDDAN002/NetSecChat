@@ -60,6 +60,12 @@ class Connection:
     #TODO
     async def disconnect(self,data):
         data = await self.send(data)
+        if data["response_type"] == 23:
+            
+            print("listening set to false")
+            self.listening = False
+        print("not listening set to false")
+        
         
         return data
     async def listen(self):
@@ -69,8 +75,7 @@ class Connection:
             data = await loop.run_in_executor(None, self.sock.recv, 1024)
             data = msgpack.unpackb(data)
             print(f"{GREEN}{time.strftime('%X')} Listener: {data}{RESET}")
-            if data["response_type"] == 23:
-                self.listening = False
+            
                 
             self.response[data["response_type"]-21] = data
         
@@ -332,6 +337,7 @@ class Manager:
     async def listen(self):
         print("listner started")
         await self.connection.listen()
+        print("listener closed")
         
      
      # Todo not needed    
