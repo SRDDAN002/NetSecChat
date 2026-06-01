@@ -703,9 +703,9 @@ class NotificationModal(ModalScreen):
         if event.button.id == "ok":
             self.app.pop_screen()
         elif event.button.id == "jump":
-            await self.app.open_chat(self.chat_name, self.chat_type)
-            self.app.pop_screen()
             
+            self.app.pop_screen()
+            await self.app.open_chat(self.chat_name, self.chat_type)
             
             
 #Adapted NotificationModal
@@ -798,7 +798,7 @@ class CreateChannelModal(ModalScreen):
         if event.button.id == "ok":
             channel_name = self.query_one("#input1").value.strip()
             description = self.query_one("#input2").value.strip()
-            
+            description+=""
             data = await self.app.server.CHANNEL_CREATE(channel_name,description)
             if data["response_type"] != 20:
             
@@ -980,10 +980,10 @@ class LayoutApp(App):
     def _update_ui(self, data: dict) -> None:
         
         try:
-            for screen in self.screen_stack:
-                if isinstance(screen, UserScreen):
-                    chat_screen = screen.query_one(ChatScreen)
-                    break
+            user_screen = next((s for s in self.screen_stack if isinstance(s, UserScreen)), None)
+            if user_screen is None:
+                self.message_queue.append(data)
+                return
             #logging.debug(f"Current screen: {self.screen}")
             #logging.debug(f"Screen id: {self.screen.id}")
             #logging.debug(f"All screens: {self.screen_stack}")
